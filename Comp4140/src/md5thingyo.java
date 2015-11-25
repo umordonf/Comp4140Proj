@@ -1,14 +1,19 @@
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 //import org.apache.commons.codec.binary.Hex;
 // the integer class has pre built in methods for this
 // note int decimal = Integer.parseInt(hexNumber, 16); (converts it to decimal)
 public class md5thingyo {
-	
+	static List <byte[]> plaintextList = new ArrayList<byte[]>();
     public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException{
         //System.out.println("ayyy lmao");
        /* 
@@ -68,19 +73,8 @@ public class md5thingyo {
         return result;
     }
     public static int randInt(int min, int max) {
-
-        // NOTE: This will (intentionally) not run as written so that folks
-        // copy-pasting have to think about how to initialize their
-        // Random instance.  Initialization of the Random instance is outside
-        // the main scope of the question, but some decent options are to have
-        // a field that is initialized once and then re-used as needed or to
-        // use ThreadLocalRandom (if using at least Java 1.7).
     	Random generator = new Random(System.nanoTime());
-
-        // nextInt is normally exclusive of the top value,
-        // so add 1 to make it inclusive
         int randomNum = generator.nextInt((max - min) + 1) + min;
-
         return randomNum;
     }
     
@@ -127,6 +121,27 @@ public class md5thingyo {
         //System.out.println(Hex.encodeHexString(newRandomByteArray));
         return newRandomByteArray;
     }
+    public static void generatePlaintext(){
+    	//create 4-8 message blocks of 128 bits each
+    	int numMessageBlocks = randInt(4,8);
+    	for (int i = 0; i< numMessageBlocks;i++){
+    	plaintextList.add(generateRandomBytes());
+    	}
+    }
+    public static void printToFile(){
+    	//String path = "C:/Users/Felix/git/Comp4140/src/outputtest";
+    	try{
+    	for (int i = 0; i< plaintextList.size();i++){
+    		Files.write(Paths.get("outputtest.txt"), plaintextList.get(i), StandardOpenOption.APPEND);
+    		}
+    	}
+    	catch(IOException e){
+    		e.printStackTrace();
+    	}
+    }
+    
+
+    
 
     public static String getMD5(byte[] text) throws UnsupportedEncodingException{ 
     	try{
