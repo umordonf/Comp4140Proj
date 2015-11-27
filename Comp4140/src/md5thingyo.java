@@ -268,6 +268,7 @@ public class md5thingyo {
             }
         }
         result += "' Unchanged: " + bitsThatDidntChange;
+        comparisonLog(result);
         return result;
     }
 }
