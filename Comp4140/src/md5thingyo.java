@@ -1,11 +1,21 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.HashMap;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 
@@ -42,28 +52,43 @@ public class md5thingyo {
         
       */
     	byte[] plaintextTest = generateRandomBytes();
-    	System.out.println("original byte array: " + plaintextTest);
-    	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + byteArrayToHex(plaintextTest).length());
+    	byte[] plaintextTest2 = generateRandomBytes();
+    	plainTextLog(plaintextTest);
+    	plainTextLog(plaintextTest2);
+    	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
+    	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
+        byte[][] data = buildTable(plaintextTest);
+        HashTable table = new HashTable(320000);
+        for(int i = 0; i < data.length;i++){
+        	table.add(getMD5(data[i]));
+        	System.out.println("new plaintexts: " + byteArrayToHex(data[i]));
+        } 
+        System.out.println("end of processing...");
+    	//byte[] plaintextTest2 = generateRandomBytes();
+
+    	//System.out.println("original byte array: " + plaintextTest);
+    	//System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + byteArrayToHex(plaintextTest).length());
+        //System.out.println();
+    	
     }
-    public static void buildTable(byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException{
-        byte[] temp = deepCopy(data);
-        String baseline = getMD5(temp);
+    
+    public static byte[][] buildTable(byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException{
+        byte[][] finalResult = new byte[(data.length*8)][data.length];
+    	byte[] temp = deepCopy(data);
+    	int count = 0;
         long value = 1;
         for(int i = 0; i < data.length;i++){
             for(int j = 0; j < 8;j++){
                 temp[i] ^= value;
-                //System.out.println("unchanged: " + getMD5(data));
-                String result = getMD5(temp);
-                System.out.printf("changed bit: %d of byte: %2d %s comparison:(* means change) %s\n",j+1,i+1,result,compare(baseline, result));
-                
+                finalResult[count] = deepCopy(temp);
+                count++;
                 temp[i] ^= value;
                 value = value << 1;
             }
             value = 1;
-            System.out.println();
         }
-        
+        return finalResult;
     }
     public static byte[] deepCopy(byte[] input){
         byte[] result = new byte[input.length];
@@ -113,33 +138,84 @@ public class md5thingyo {
 	    } 
 	    */
     public static byte[] generateRandomBytes(){
-        String output = "";
+    	/*
+    	long rgenseed = System.nanoTime();
+    	Random generator = new Random();
+    	generator.setSeed(rgenseed);
+    	System.out.println("Random number generator seed is " + rgenseed);
+    	*/
+    	
         Random generator = new Random(System.nanoTime());
-        byte[] newRandomByteArray = new byte[64];
+        byte[] newRandomByteArray = new byte[32];
         generator.nextBytes(newRandomByteArray);
         System.out.println("Randomly generated input: " + byteArrayToHex(newRandomByteArray));
         //System.out.println(Hex.encodeHexString(newRandomByteArray));
         return newRandomByteArray;
     }
+
+    
+   public static String toBinary(byte[] bytes){
+        StringBuilder sb = new StringBuilder(bytes.length * Byte.SIZE);
+        for( int i = 0; i < Byte.SIZE * bytes.length; i++ )
+            sb.append((bytes[i / Byte.SIZE] << i % Byte.SIZE & 0x80) == 0 ? '0' : '1');
+        return sb.toString();
+    }
+    
     public static void generatePlaintext(){
     	//create 4-8 message blocks of 128 bits each
     	int numMessageBlocks = randInt(4,8);
     	for (int i = 0; i< numMessageBlocks;i++){
-    	plaintextList.add(generateRandomBytes());
+    		plaintextList.add(generateRandomBytes());
     	}
     }
     public static void printToFile(){
-    	//String path = "C:/Users/Felix/git/Comp4140/src/outputtest";
-    	try{
-    	for (int i = 0; i< plaintextList.size();i++){
-    		Files.write(Paths.get("outputtest.txt"), plaintextList.get(i), StandardOpenOption.APPEND);
-    		}
-    	}
-    	catch(IOException e){
-    		e.printStackTrace();
+    	String path = "C:/Users/Felix/git/Comp4140/src/outputtest.txt";
+    	try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path, true)))) {
+    	    out.println("the text");
+    	    //more code
+    	    out.println("more text");
+    	    //more code
+    	}catch (IOException e) {
+    	    //exception handling left as an exercise for the reader
     	}
     }
     
+    public static void plainTextLog(byte[] input){
+    	String timeStamp = new SimpleDateFormat("MM,dd HH:mm").format(Calendar.getInstance().getTime());
+    	Path currentRelativePath = Paths.get("");
+    	String path = currentRelativePath.toAbsolutePath().toString() + "\\src\\outputtest.txt"; // note \\ is escaping a single slash
+    	String str = toBinary(input);
+    	String output = ("MessageBlock: " + byteArrayToHex(input) + " date: " + timeStamp);
+    	try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path, true)))) {
+    	    out.println(output);
+    	}catch (IOException e) {
+    	    //exception handling left as an exercise for the reader
+    	}
+    }
+    public static void plainTextLog(String input){
+    	String timeStamp = new SimpleDateFormat("MM,dd HH:mm").format(Calendar.getInstance().getTime());
+    	Path currentRelativePath = Paths.get("");
+    	String path = currentRelativePath.toAbsolutePath().toString() + "\\src\\outputtest.txt"; // note \\ is escaping a single slash
+    //	String str = new String(input, StandardCharsets.UTF_8);
+    	String output = ("MessageBlock: " + input + "date: " + timeStamp);
+    	try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path, true)))) {
+    	    out.println(output);
+    	}catch (IOException e) {
+    	    //exception handling left as an exercise for the reader
+    	}
+    }
+    
+    public static void comparisonLog(String input){
+    	String timeStamp = new SimpleDateFormat("MM,dd HH:mm").format(Calendar.getInstance().getTime());
+    	Path currentRelativePath = Paths.get("");
+    	String path = currentRelativePath.toAbsolutePath().toString() + "\\src\\comparisons.txt"; // note \\ is escaping a single slash
+    	try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path, true)))) {
+    	    out.println(input);
+    	}catch (IOException e) {
+    	    //exception handling left as an exercise for the reader
+    	}
+    }
+
 
     
 
@@ -200,6 +276,7 @@ public class md5thingyo {
             }
         }
         result += "' Unchanged: " + bitsThatDidntChange;
+        comparisonLog(result);
         return result;
     }
 }
