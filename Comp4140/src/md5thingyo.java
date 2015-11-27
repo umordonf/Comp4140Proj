@@ -3,6 +3,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,25 +25,6 @@ public class md5thingyo {
 	static List <byte[]> plaintextList = new ArrayList<byte[]>();
     public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException{
         //System.out.println("ayyy lmao");
-       /* 
-        
-        byte[] plaintext = generateRandomBytes();
-        System.out.println("MD5 hashed byte array: " + getMD5(plaintext)  + " input length: " + byteArrayToHex(plaintext).length());
-        System.out.println();
-        
-        ArrayList<byte[]> plaintexts = new ArrayList<>();
-        
-        for(int i = 0; i < inputs.length;i++){
-            plaintexts.add(inputs[i].getBytes());
-            System.out.println("Hashing input:         " + "'" + inputs[i] + "'" + ", input length: " + plaintexts.get(i).length);
-            System.out.println("MD5 hashed byte array: " + getMD5(plaintexts.get(i)));
-            System.out.println("Excepted md5 hash:     " + results[i]);
-            System.out.println();
-        }
-
-        //buildTable(plaintext);
-        
-      */
     	byte[] plaintextTest = generateRandomBytes();
     	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
@@ -54,20 +36,52 @@ public class md5thingyo {
     }
     public static void birthdayAttack(byte[] plaintext){
     	 byte[][] data = buildTable(plaintext);
-         HashMap<Integer, String> hash = new HashMap<Integer, String>();
+         HashMap<Integer, String> md5Hash   = new HashMap<Integer, String>();
+         HashMap<Integer, String> plainHash = new HashMap<Integer, String>();
+         /* to force a collison for testing
+         md5Hash.put(getMD5(data[0]).hashCode(), getMD5(data[0]));
+         plainHash.put(getMD5(data[0]).hashCode(), byteArrayToHex(data[0]));
+         */
          for(int i = 0; i < data.length;i++){
-         	
-         	if (hash.get(data[i].hashCode()) == null){
-         		hash.put(getMD5(data[i]).hashCode(), getMD5(data[i]));
-         	}
-         	else{
-         		System.out.println("hash collision: " + hash.get(data[i].hashCode()) + " with " + getMD5(data[i]));
-         	}
-         	//System.out.println("new plaintexts: " + byteArrayToHex(data[i]));
+			 int hash = getMD5(data[i]).hashCode();
+			 if(md5Hash.get(hash) == null){
+				 md5Hash.put(hash, getMD5(data[i]));
+				 plainHash.put(hash, byteArrayToHex(data[i]));
+				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
+			 }
+			 else{
+	        	 System.out.printf("hash collision: %s\n%80s\n",plainHash.get(hash),byteArrayToHex(data[i]));
+			 }
          }
+         boolean end = false;
+         int attempts = 0;
+         byte[] attack = generateRandomBytes();
+         int hash = getMD5(attack).hashCode();
+         while(!end){
+        	 if(md5Hash.get(hash) != null && !plainHash.get(hash).equals(byteArrayToHex(attack))){
+        		 end = true;
+        	 }
+        	 else if(attempts >= 10000){// probably make this a constant some where its just an upper bound 
+        		 end = true;
+        		 System.out.println("ran "+ attempts + " iterations with no collison");
+        	 }
+        	 else{
+	        	 // moddify byte array attack here to try and get a collision
+        		 // this is terrible brute force code, used only for testing at the moment 
+        		 BigInteger temp = new BigInteger(byteArrayToHex(attack), 16);
+        		 attack = temp.add(BigInteger.ONE).toByteArray();
+        		 
+	        	 hash = getMD5(attack).hashCode();
+	        	 attempts ++;
+        	 } 
+         }
+         if (attempts < 1000){
+        	 System.out.printf("hash collision: %s\n%80s\n",plainHash.get(hash),byteArrayToHex(attack));
+         }
+         
+         
+         
     }
-    
-    
     public static byte[][] buildTable(byte[] data){
         byte[][] finalResult = new byte[(data.length*8)][data.length];
     	byte[] temp = deepCopy(data);
@@ -143,7 +157,7 @@ public class md5thingyo {
         Random generator = new Random(System.nanoTime());
         byte[] newRandomByteArray = new byte[32];
         generator.nextBytes(newRandomByteArray);
-        System.out.println("Randomly generated input: " + byteArrayToHex(newRandomByteArray));
+        //System.out.println("Randomly generated input: " + byteArrayToHex(newRandomByteArray));
         //System.out.println(Hex.encodeHexString(newRandomByteArray));
         return newRandomByteArray;
     }
