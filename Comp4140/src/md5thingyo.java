@@ -27,12 +27,6 @@ public class md5thingyo {
     public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException{
         //System.out.println("ayyy lmao");
        /* 
-        String[] inputs = {"The quick brown fox jumps over the lazy dog",
-                           "The quick brown fox jumps over the lazy dog.",
-                           ""};
-        String[] results = {"9e107d9d372bb6826bd81d3542a419d6",
-                            "e4d909c290d0fb1ca068ffaddf22cbd0",
-                            "d41d8cd98f00b204e9800998ecf8427e"};
         
         byte[] plaintext = generateRandomBytes();
         System.out.println("MD5 hashed byte array: " + getMD5(plaintext)  + " input length: " + byteArrayToHex(plaintext).length());
