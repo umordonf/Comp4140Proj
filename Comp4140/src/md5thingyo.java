@@ -52,24 +52,26 @@ public class md5thingyo {
         
       */
     	byte[] plaintextTest = generateRandomBytes();
-    	byte[] plaintextTest2 = generateRandomBytes();
     	plainTextLog(plaintextTest);
-    	plainTextLog(plaintextTest2);
     	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
         byte[][] data = buildTable(plaintextTest);
-        HashTable table = new HashTable(320000);
+        HashMap<Integer, String> hash = new HashMap<Integer, String>();
+        
         for(int i = 0; i < data.length;i++){
-        	table.add(getMD5(data[i]));
-        	System.out.println("new plaintexts: " + byteArrayToHex(data[i]));
-        } 
+        	
+        	if (hash.get(data[i].hashCode()) == null){
+        		hash.put(getMD5(data[i]).hashCode(), getMD5(data[i]));
+        	}
+        	else{
+        		System.out.println("hash collision: " + hash.get(data[i].hashCode()) + " with " + getMD5(data[i]));
+        	}
+        	//System.out.println("new plaintexts: " + byteArrayToHex(data[i]));
+        }
+        		
+        
         System.out.println("end of processing...");
-    	//byte[] plaintextTest2 = generateRandomBytes();
-
-    	//System.out.println("original byte array: " + plaintextTest);
-    	//System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + byteArrayToHex(plaintextTest).length());
-        //System.out.println();
     	
     }
     
@@ -90,6 +92,7 @@ public class md5thingyo {
         }
         return finalResult;
     }
+
     public static byte[] deepCopy(byte[] input){
         byte[] result = new byte[input.length];
         for(int i = 0; i < result.length;i++){
@@ -162,7 +165,7 @@ public class md5thingyo {
     }
     
     public static void generatePlaintext(){
-    	//create 4-8 message blocks of 128 bits each
+    	//create 4-8 message blocks of 128 bits eachd
     	int numMessageBlocks = randInt(4,8);
     	for (int i = 0; i< numMessageBlocks;i++){
     		plaintextList.add(generateRandomBytes());
