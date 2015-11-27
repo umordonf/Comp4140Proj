@@ -47,24 +47,28 @@ public class md5thingyo {
     	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
-        byte[][] data = buildTable(plaintextTest);
-        HashMap<Integer, String> hash = new HashMap<Integer, String>();
         
-        for(int i = 0; i < data.length;i++){
-        	
-        	if (hash.get(data[i].hashCode()) == null){
-        		hash.put(getMD5(data[i]).hashCode(), getMD5(data[i]));
-        	}
-        	else{
-        		System.out.println("hash collision: " + hash.get(data[i].hashCode()) + " with " + getMD5(data[i]));
-        	}
-        	//System.out.println("new plaintexts: " + byteArrayToHex(data[i]));
-        }
-        		
+        birthdayAttack(plaintextTest);
         
         System.out.println("end of processing...");
     }
-    public static byte[][] buildTable(byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException{
+    public static void birthdayAttack(byte[] plaintext){
+    	 byte[][] data = buildTable(plaintext);
+         HashMap<Integer, String> hash = new HashMap<Integer, String>();
+         for(int i = 0; i < data.length;i++){
+         	
+         	if (hash.get(data[i].hashCode()) == null){
+         		hash.put(getMD5(data[i]).hashCode(), getMD5(data[i]));
+         	}
+         	else{
+         		System.out.println("hash collision: " + hash.get(data[i].hashCode()) + " with " + getMD5(data[i]));
+         	}
+         	//System.out.println("new plaintexts: " + byteArrayToHex(data[i]));
+         }
+    }
+    
+    
+    public static byte[][] buildTable(byte[] data){
         byte[][] finalResult = new byte[(data.length*8)][data.length];
     	byte[] temp = deepCopy(data);
     	int count = 0;
@@ -155,14 +159,21 @@ public class md5thingyo {
     	Path currentRelativePath = Paths.get("");
     	String path = currentRelativePath.toAbsolutePath().toString() + "\\src\\outputtest.txt"; // note \\ is escaping a single slash
     	//System.out.println("Current relative path is: " + path);
+    	try{
+    		for (int i = 0; i< plaintextList.size();i++){
+    			Files.write(Paths.get(path), generateRandomBytes(), StandardOpenOption.APPEND);
+    		}
+    	}
+    	catch(IOException e){
+    		e.printStackTrace();
     	    	try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path, true)))) {
     	    out.println("the text");
     	    //more code
     	    out.println("more text");
     	    //more code
-    	}catch (IOException e) {
+    	}catch (IOException ex) {
     	    //exception handling left as an exercise for the reader
-    	}
+    	}}// no idea why but compiler insists on another closing bracket (or we get compile errors)
     }
     
     public static void plainTextLog(byte[] input){
@@ -208,10 +219,7 @@ public class md5thingyo {
     	}
     }
 
-
-    
-
-    public static String getMD5(byte[] text) throws UnsupportedEncodingException{ 
+    public static String getMD5(byte[] text){ 
     	try{
             MessageDigest md;
             md = MessageDigest.getInstance("MD5");
@@ -224,7 +232,7 @@ public class md5thingyo {
     	}
     	catch(NoSuchAlgorithmException e){
             throw new RuntimeException(e);
-    	}
+    	}	
     }
     public static String byteArrayToHex(byte[] input){
         String result = "";
