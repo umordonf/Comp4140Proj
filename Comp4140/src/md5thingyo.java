@@ -28,7 +28,6 @@ public class md5thingyo {
     	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
-        
         birthdayAttack(plaintextTest);
         
         System.out.println("end of processing...");
@@ -96,11 +95,12 @@ public class md5thingyo {
         return finalResult;
     }
     public static String hexPlusPlus(String input){
+    	// note doesnt work on single hex chars
     	String result;
     	char[] ch = input.toCharArray();
     	int pos = ch.length-1;
     	boolean end = false;
-    	for(int i = pos;pos >= 0 && !end;i--){
+    	for(int i = pos;pos > 0 && !end;i--){
     		int val = (int)ch[i];
     		if(val == 57){
     			// jump from 9 to a
@@ -117,6 +117,10 @@ public class md5thingyo {
     			end = true;
     		}
     		ch[i] = (char)val;	
+    		if(i == 0){
+    			end = true;
+    		}
+    		
     	}
     	result = new String(ch);
     	return result;
