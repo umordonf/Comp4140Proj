@@ -3,7 +3,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -67,10 +66,10 @@ public class md5thingyo {
         	 }
         	 else{
 	        	 // moddify byte array attack here to try and get a collision
-        		 // this is terrible brute force code, used only for testing at the moment 
-        		 BigInteger temp = new BigInteger(byteArrayToHex(attack), 16);
-        		 attack = temp.add(BigInteger.ONE).toByteArray();
-        		 
+        		 // this is slightly better code but still not perfect
+        		 String temp = byteArrayToHex(attack);
+        		 temp = hexPlusPlus(temp);
+        		 attack = hexStringToByteArray(temp);	 
 	        	 hash = getMD5(attack).hashCode();
 	        	 attempts ++;
         	 } 
@@ -78,9 +77,6 @@ public class md5thingyo {
          if (attempts < 1000){
         	 System.out.printf("hash collision: %s\n%80s\n",plainHash.get(hash),byteArrayToHex(attack));
          }
-         
-         
-         
     }
     public static byte[][] buildTable(byte[] data){
         byte[][] finalResult = new byte[(data.length*8)][data.length];
@@ -98,6 +94,32 @@ public class md5thingyo {
             value = 1;
         }
         return finalResult;
+    }
+    public static String hexPlusPlus(String input){
+    	String result;
+    	char[] ch = input.toCharArray();
+    	int pos = ch.length-1;
+    	boolean end = false;
+    	for(int i = pos;pos >= 0 && !end;i--){
+    		int val = (int)ch[i];
+    		if(val == 57){
+    			// jump from 9 to a
+    			val = 97;
+    			end = true;
+    		}
+    		else if(val == 102){
+    			// jump from f to 0
+    			val = 48;
+    		}
+    		else{
+    			// otherwise no issue
+    			val++;
+    			end = true;
+    		}
+    		ch[i] = (char)val;	
+    	}
+    	result = new String(ch);
+    	return result;
     }
     public static byte[] deepCopy(byte[] input){
         byte[] result = new byte[input.length];
