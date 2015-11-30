@@ -37,33 +37,43 @@ public class md5thingyo {
         System.out.println("end of processing...");
     }
     public static void birthdayAttack(byte[] plaintext){
-    	 byte[][] data = buildTable(plaintext);
+    	 //largeRandomTable(18);
+    	 // note anything over 2^18 takes a long time 
+    	 largeRandomTable(MESSAGESIZE/2);
+    	
+    	 //byte[][] data = buildTable(plaintext);
          HashMap<Integer, String> md5Hash   = new HashMap<Integer, String>();
          HashMap<Integer, String> plainHash = new HashMap<Integer, String>();
-         /* to force a collison for testing
-         md5Hash.put(getMD5(data[0]).hashCode(), getMD5(data[0]));
-         plainHash.put(getMD5(data[0]).hashCode(), byteArrayToHex(data[0]));
-         */
-         for(int i = 0; i < data.length;i++){
-			 int hash = getMD5(data[i]).hashCode();
+         
+
+         
+         for(int i = 0; i < plaintextList.size();i++){
+			 int hash = getMD5(plaintextList.get(i)).hashCode();
 			 if(md5Hash.get(hash) == null){
-				 md5Hash.put(hash, getMD5(data[i]));
-				 plainHash.put(hash, byteArrayToHex(data[i]));
+				 md5Hash.put(hash, getMD5(plaintextList.get(i)));
+				 plainHash.put(hash, byteArrayToHex(plaintextList.get(i)));
 				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
 			 }
 			 else{
-	        	 System.out.printf("hash collision: %s\n%80s\n",plainHash.get(hash),byteArrayToHex(data[i]));
+				 // when two things are trying to be added to the same spot discard the new item
+				 //System.out.println("collison adding items to hashmap");
+	        	 //System.out.printf("hash collision: %s %s\n%80s %s\n",plainHash.get(hash),md5Hash.get(hash),byteArrayToHex(data[i]),getMD5(data[i]));
 			 }
          }
          boolean end = false;
          int attempts = 0;
          byte[] attack = generateRandomBytes(MESSAGESIZE);
+         //to force a collison for testing
+         //attack = plaintextList.get(0);
+         
+         int upperBound = 100000;
          int hash = getMD5(attack).hashCode();
          while(!end){
-        	 if(md5Hash.get(hash) != null && !plainHash.get(hash).equals(byteArrayToHex(attack))){
+        	 if(md5Hash.get(hash) != null && md5Hash.get(hash).equals(getMD5(attack))){
         		 end = true;
+        		 System.out.printf("hash collision:\ntext: %s md5: %s hash: %s\ntext: %s md5: %s hash: %s\n",plainHash.get(hash),md5Hash.get(hash),hash,byteArrayToHex(attack),getMD5(attack),getMD5(attack).hashCode());
         	 }
-        	 else if(attempts >= 10000){// probably make this a constant some where its just an upper bound 
+        	 else if(attempts >= upperBound){// probably make this a constant some where its just an upper bound 
         		 end = true;
         		 System.out.println("ran "+ attempts + " iterations with no collison");
         	 }
@@ -77,12 +87,21 @@ public class md5thingyo {
 	        	 attempts ++;
         	 } 
          }
-         if (attempts < 1000){
-        	 System.out.printf("hash collision: %s\n%80s\n",plainHash.get(hash),byteArrayToHex(attack));
-         }
+    }
+    public static void largeRandomTable(int pow){
+    	int size = (int) Math.pow(2, pow);
+    	System.out.println("testing collison with random table of size 2^" + pow);
+    	for(int i = 0; i < size-1;i++){
+    		byte[] message = generateRandomBytes(MESSAGESIZE);
+    		while(plaintextList.contains(message)){
+    			// dont add the same item twice
+    			message = generateRandomBytes(MESSAGESIZE);
+    		}
+    		plaintextList.add(message);
+    	}
     }
     public static byte[][] buildTable(byte[] data){
-        byte[][] finalResult = new byte[(data.length*8)][data.length];
+    	byte[][] finalResult = new byte[(data.length*8)][data.length];
     	byte[] temp = deepCopy(data);
     	int count = 0;
         long value = 1;
