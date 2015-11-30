@@ -22,11 +22,12 @@ import java.util.Random;
 // the integer class has pre built in methods for this
 // note int decimal = Integer.parseInt(hexNumber, 16); (converts it to decimal)
 public class md5thingyo {
-	static List <byte[]> plaintextList = new ArrayList<byte[]>();
+	private static final int MESSAGESIZE = 32; // 32 bytes
+	private static List <byte[]> plaintextList = new ArrayList<byte[]>();
     public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException{
     	
     	
-    	byte[] plaintextTest = generateRandomBytes();
+    	byte[] plaintextTest = generateRandomBytes(MESSAGESIZE);
     	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
@@ -56,7 +57,7 @@ public class md5thingyo {
          }
          boolean end = false;
          int attempts = 0;
-         byte[] attack = generateRandomBytes();
+         byte[] attack = generateRandomBytes(MESSAGESIZE);
          int hash = getMD5(attack).hashCode();
          while(!end){
         	 if(md5Hash.get(hash) != null && !plainHash.get(hash).equals(byteArrayToHex(attack))){
@@ -211,23 +212,6 @@ public class md5thingyo {
 	        return buf.toString();
 	    } 
 	    */
-    
-    public static byte[] generateRandomBytes(){
-    	/*
-    	long rgenseed = System.nanoTime();
-    	Random generator = new Random();
-    	generator.setSeed(rgenseed);
-    	System.out.println("Random number generator seed is " + rgenseed);
-    	*/
-    	// might want this to return byte[] of variable sizes
-        Random generator = new Random(System.nanoTime());
-        byte[] newRandomByteArray = new byte[16];
-        generator.nextBytes(newRandomByteArray);
-        //System.out.println("Randomly generated input: " + byteArrayToHex(newRandomByteArray));
-        //System.out.println(Hex.encodeHexString(newRandomByteArray));
-        return newRandomByteArray;
-    }
-    
     public static byte[] generateRandomBytes(int size){
     	/*
     	long rgenseed = System.nanoTime();
@@ -256,7 +240,7 @@ public class md5thingyo {
     	//might be useless now 
     	int numMessageBlocks = randInt(4,8);
     	for (int i = 0; i< numMessageBlocks;i++){
-    		plaintextList.add(generateRandomBytes());
+    		plaintextList.add(generateRandomBytes(MESSAGESIZE));
     	}
     }
     
@@ -267,7 +251,7 @@ public class md5thingyo {
     	//System.out.println("Current relative path is: " + path);
     	try{
     		for (int i = 0; i< plaintextList.size();i++){
-    			Files.write(Paths.get(path), generateRandomBytes(), StandardOpenOption.APPEND);
+    			Files.write(Paths.get(path), generateRandomBytes(MESSAGESIZE), StandardOpenOption.APPEND);
     		}
     	}
     	catch(IOException e){
