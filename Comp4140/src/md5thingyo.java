@@ -3,6 +3,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,13 +24,15 @@ import java.util.Random;
 public class md5thingyo {
 	static List <byte[]> plaintextList = new ArrayList<byte[]>();
     public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException{
-        //System.out.println("ayyy lmao");
+    	
+    	
     	byte[] plaintextTest = generateRandomBytes();
     	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
         birthdayAttack(plaintextTest);
         
+    	//diffAnal();
         System.out.println("end of processing...");
     }
     public static void birthdayAttack(byte[] plaintext){
@@ -138,22 +141,58 @@ public class md5thingyo {
         return randomNum;
     }
     
-    public static void diffAnal(byte[] input){
+    public static void diffAnal(){
     	//ill split this crap up later but for now just leave it like this cause i hate scrolling around while bug fixing
     	// This is for starting the differential attack on round three
-    	byte[] diffAnalAttempt = new byte[input.length];
-    	for (int i = 29; i< 33; i++){
-    		diffAnalAttempt[i] = input[i];
+    	//first we need to create two 1024 bit messages, each in 512 bit blocks.
+    	//let us randomly generate our first message and store it in a byte[][]
+    	//the 512 bit blocks need to be separated into 16 parts of 32 bits each
+    	int[][] messageBlockOne = new int[2][16];
+    	int[][] messageBlockTwo = new int[2][16];
+    	int max = Integer.MAX_VALUE+1; // need something to represent 2^31
+    	ByteBuffer b1 = ByteBuffer.allocate(4);
+    	ByteBuffer b2 = ByteBuffer.allocate(4);
+    	ByteBuffer b3 = ByteBuffer.allocate(4);
+    	ByteBuffer b4 = ByteBuffer.allocate(4);
+    	int test = generateMessageBlock();
+    	int test2 = test + max;
+    	int test3 = test2-test;
+    	b1.putInt(max);
+    	b2.putInt(test);
+    	b3.putInt(test2);
+    	b4.putInt(test3);
+    	byte[] temp1 = b1.array();
+    	byte[] temp2 = b2.array();
+    	byte[] temp3 = b3.array();
+    	byte[] temp4 = b4.array();
+    	System.out.println("2^31: " + toBinary(temp1) + " plus generated block: " + toBinary(temp2) + " equals: " + toBinary(temp3));
+    	System.out.println("result - generated = " + toBinary(temp4));
+    	//System.out.println(max);
+    	int posOther = 32768;
+    	int negOther = -32768;
+    	//TODO: put message creation elsewhere
+    	/*
+    	for (int i = 0; i<2;i++){
+    		for (int j = 0; j<16;j++){
+    			int temp = generateMessageBlock();
+    			messageBlockOne[i][j] = temp;
+    			messageBlockTwo[i][j] = temp;
+    		}
     	}
-    	//This is supposed to create a message difference that can be kept in check throughout the third round?
-    	int randomValueforselectingMessageDifference = randInt(32, 45);
-    	//method call for creating message difference equal to 2^31... shiiit 
+    	
+    	//now that both messages are equal, we must change positions 5, 12 and 15 in both blocks of message two
+    	//maybe i need longs? integers are 2^32 now in java 8 so this should be fine...
+    	//the message  differences in block one positions 5, 12 and 15 must be 2^31, 2^15 and 2^31
+    	//the message  differences in block one positions 5, 12 and 15 must be 2^31, -2^15 and 2^31
+    	//all other message differences in the blocks must be zero (so equal)
+    	messageBlockTwo[0][4] = messageBlockOne[0][4] + max;
+    	messageBlockTwo[1][4] = messageBlockOne[0][4] + max;
+    	messageBlockTwo[0][11] = messageBlockOne[0][4] + posOther;
+    	messageBlockTwo[0][11] = messageBlockOne[0][4] + negOther;
+    	*/
+    	
     }
     
-    public static byte[] calcDifferenceForTheorem621(byte[] original, byte[] diffattempt){
-    	
-    	return diffattempt;
-    }
         
 	/*
 	 private static String convertToHex(byte[] data) { 
@@ -172,6 +211,7 @@ public class md5thingyo {
 	        return buf.toString();
 	    } 
 	    */
+    
     public static byte[] generateRandomBytes(){
     	/*
     	long rgenseed = System.nanoTime();
@@ -179,21 +219,47 @@ public class md5thingyo {
     	generator.setSeed(rgenseed);
     	System.out.println("Random number generator seed is " + rgenseed);
     	*/
-    	
+    	// might want this to return byte[] of variable sizes
         Random generator = new Random(System.nanoTime());
-        byte[] newRandomByteArray = new byte[32];
+        byte[] newRandomByteArray = new byte[16];
         generator.nextBytes(newRandomByteArray);
         //System.out.println("Randomly generated input: " + byteArrayToHex(newRandomByteArray));
         //System.out.println(Hex.encodeHexString(newRandomByteArray));
         return newRandomByteArray;
     }
+    
+    public static byte[] generateRandomBytes(int size){
+    	/*
+    	long rgenseed = System.nanoTime();
+    	Random generator = new Random();
+    	generator.setSeed(rgenseed);
+    	System.out.println("Random number generator seed is " + rgenseed);
+    	*/
+    	// i needed one with variable size but i didnt wanna break your references
+        Random generator = new Random(System.nanoTime());
+        byte[] newRandomByteArray = new byte[size];
+        generator.nextBytes(newRandomByteArray);
+        //System.out.println("Randomly generated input: " + byteArrayToHex(newRandomByteArray));
+        //System.out.println(Hex.encodeHexString(newRandomByteArray));
+        return newRandomByteArray;
+    }
+    
+    public static int generateMessageBlock(){
+    	int result = 0;
+    	byte[] temp =  generateRandomBytes(4);
+    	result = ByteBuffer.wrap(temp).getInt();
+    	return result;
+    }
+    
     public static void generatePlaintext(){
     	//create 4-8 message blocks of 128 bits each
+    	//might be useless now 
     	int numMessageBlocks = randInt(4,8);
     	for (int i = 0; i< numMessageBlocks;i++){
     		plaintextList.add(generateRandomBytes());
     	}
     }
+    
     public static void printToFile(){
     	//this will work for both of us as it will get the current location of the github project that we are working in.
     	Path currentRelativePath = Paths.get("");
