@@ -42,8 +42,8 @@ public class md5thingyo {
     public static void birthdayAttack(byte[] plaintext){
     	 // note anything over 2^20 takes a long time 
     	 //Set<byte[]> set = largeRandomTable(MESSAGESIZE/2);
-    	 Set<byte[]> set = largeRandomTable(20);
-    
+    	 //Set<byte[]> set = largeRandomTable(20);
+    	 Set<byte[]> set = largeOrganizedTable();
     	 
          HashMap<Integer, String> md5Hash   = new HashMap<Integer, String>();
          HashMap<Integer, String> plainHash = new HashMap<Integer, String>();
@@ -102,6 +102,28 @@ public class md5thingyo {
 		}
     	return set;
     }
+    public static Set<byte[]> largeOrganizedTable(){
+    	//2^32 = 16^7
+    	int pow = 5;
+    	Set<byte[]> set = new HashSet<byte[]>();
+    	int size = (int) Math.pow(16, pow);
+    	System.out.println("testing collison with organized table of size 16^" + pow);
+    	
+    	byte[] start = generateRandomBytes(pow);
+    	byte[] end = generateRandomBytes(MESSAGESIZE-pow);	
+    	int count = size;
+		while(set.size() < size){
+			byte[] temp = new byte[MESSAGESIZE];
+			start = Integer.toHexString(count).getBytes();
+			count --;
+			for(int i = 0; i < MESSAGESIZE-pow;i++){
+				temp[i+pow] = end[i];
+			}
+			set.add(temp);
+		}
+    	return set;
+    }
+    
     public static byte[][] buildTable(byte[] data){
     	byte[][] finalResult = new byte[(data.length*8)][data.length];
     	byte[] temp = deepCopy(data);
