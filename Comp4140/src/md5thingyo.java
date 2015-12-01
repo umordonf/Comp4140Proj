@@ -14,8 +14,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 
 //import org.apache.commons.codec.binary.Hex;
@@ -37,21 +40,21 @@ public class md5thingyo {
         System.out.println("end of processing...");
     }
     public static void birthdayAttack(byte[] plaintext){
-    	 //largeRandomTable(18);
-    	 // note anything over 2^18 takes a long time 
-    	 largeRandomTable(MESSAGESIZE/2);
-    	
-    	 //byte[][] data = buildTable(plaintext);
+    	 // note anything over 2^20 takes a long time 
+    	 //Set<byte[]> set = largeRandomTable(MESSAGESIZE/2);
+    	 Set<byte[]> set = largeRandomTable(20);
+    
+    	 
          HashMap<Integer, String> md5Hash   = new HashMap<Integer, String>();
          HashMap<Integer, String> plainHash = new HashMap<Integer, String>();
          
-
-         
-         for(int i = 0; i < plaintextList.size();i++){
-			 int hash = getMD5(plaintextList.get(i)).hashCode();
+         Iterator<byte[]> iterator = set.iterator();
+         while(iterator.hasNext()) {
+             byte[] setElement = iterator.next();
+             int hash = getMD5(setElement).hashCode();
 			 if(md5Hash.get(hash) == null){
-				 md5Hash.put(hash, getMD5(plaintextList.get(i)));
-				 plainHash.put(hash, byteArrayToHex(plaintextList.get(i)));
+				 md5Hash.put(hash, getMD5(setElement));
+				 plainHash.put(hash, byteArrayToHex(setElement));
 				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
 			 }
 			 else{
@@ -59,7 +62,9 @@ public class md5thingyo {
 				 //System.out.println("collison adding items to hashmap");
 	        	 //System.out.printf("hash collision: %s %s\n%80s %s\n",plainHash.get(hash),md5Hash.get(hash),byteArrayToHex(data[i]),getMD5(data[i]));
 			 }
+             iterator.remove();
          }
+
          boolean end = false;
          int attempts = 0;
          byte[] attack = generateRandomBytes(MESSAGESIZE);
@@ -88,17 +93,14 @@ public class md5thingyo {
         	 } 
          }
     }
-    public static void largeRandomTable(int pow){
+    public static Set<byte[]> largeRandomTable(int pow){
+    	Set<byte[]> set = new HashSet<byte[]>();
     	int size = (int) Math.pow(2, pow);
     	System.out.println("testing collison with random table of size 2^" + pow);
-    	for(int i = 0; i < size-1;i++){
-    		byte[] message = generateRandomBytes(MESSAGESIZE);
-    		while(plaintextList.contains(message)){
-    			// dont add the same item twice
-    			message = generateRandomBytes(MESSAGESIZE);
-    		}
-    		plaintextList.add(message);
-    	}
+		while(set.size() < size){
+			set.add(generateRandomBytes(MESSAGESIZE));
+		}
+    	return set;
     }
     public static byte[][] buildTable(byte[] data){
     	byte[][] finalResult = new byte[(data.length*8)][data.length];
