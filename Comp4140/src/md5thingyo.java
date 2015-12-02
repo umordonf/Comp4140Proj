@@ -14,11 +14,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 
 //import org.apache.commons.codec.binary.Hex;
@@ -27,7 +24,7 @@ import java.util.Set;
 public class md5thingyo {
 	public static final int MESSAGESIZE = 32; // 32 bytes
 	private static List <byte[]> plaintextList = new ArrayList<byte[]>();
-	public static int pow = 22;
+	public static HashMap<String, byte[]> md5Hash = new HashMap<String, byte[]>();
     public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException{
     	long time = System.nanoTime();
     	
@@ -49,17 +46,16 @@ public class md5thingyo {
     public static void birthdayAttack(byte[] plaintext){
     	 // note anything over 2^20 takes a long time 
     	 long time = System.nanoTime();
-    	 System.out.println("testing collison with random table of size 2^" + pow);
-    	 /* 
-    	 table t1 = new table();
-    	 table t2 = new table();
+    	 System.out.println("testing collison with random table of size 2^" + 22);
+    	// /* 
+    	 table t1 = new table(22);
+    	 table t2 = new table(22);
          t1.start();
          t2.start();
     	 // wait for the threads to finish
          while(t1.t.isAlive() || t2.t.isAlive()){ }
-         */
-    	 //HashMap<String, byte[]> md5Hash = t1.md5Hash;
-         HashMap<String, byte[]> md5Hash = largeRandomTable(22);
+      //   */
+        // HashMap<String, byte[]> md5Hash = largeRandomTable(22);
     	 
     	 
     	 time = System.nanoTime() - time;
@@ -93,8 +89,7 @@ public class md5thingyo {
         	 } 
          }
     }
-    public static HashMap<String, byte[]> largeRandomTable(int pow){
-    	HashMap<String, byte[]> md5Hash = new HashMap<String, byte[]>();
+    public static void largeRandomTable(int pow){
     	int size = (int) Math.pow(2, pow);
 		while(md5Hash.size() < size){
 			byte[] temp = generateRandomBytes(MESSAGESIZE);
@@ -104,12 +99,10 @@ public class md5thingyo {
 				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
 			}
 		}
-    	return md5Hash;
     }
-    public static HashMap<String, byte[]> largeOrganizedTable(){
+    public static void largeOrganizedTable(){
     	//2^32 = 16^7
     	int pow = 5;
-    	HashMap<String, byte[]> md5Hash = new HashMap<String, byte[]>();
     	int size = (int) Math.pow(16, pow);
     	System.out.println("testing collison with organized table of size 16^" + pow + "(2^" + pow*4 + ")");
     	
@@ -129,7 +122,6 @@ public class md5thingyo {
 			}
     		start = hexPlusPlus(start);
     	}
-    	return md5Hash;
     }
     public static String hexPlusPlus(String input){
     	// note doesnt work on single hex chars
@@ -405,19 +397,38 @@ public class md5thingyo {
 }
 class table implements Runnable {
 	public Thread t;
-	public HashMap<String, byte[]> md5Hash = new HashMap<String, byte[]>();
+	private int size;
+	public table(int pow){
+		size = (int) Math.pow(2, pow);
+	}
+	
 	public void run(){
-		int pow = md5thingyo.pow;
-    	int size = (int) Math.pow(2, pow);
-		while(md5Hash.size() < size){
-			byte[] t = md5thingyo.generateRandomBytes(md5thingyo.MESSAGESIZE);
-			String hash = md5thingyo.getMD5(t);
-			if(md5Hash.get(hash) == null){
-				 md5Hash.put(hash, t);
+		while(md5thingyo.md5Hash.size() < size){
+			byte[] t = lock();
+			String hash = getMD5(t);
+			if(md5thingyo.md5Hash.get(hash) == null){
+				md5thingyo.md5Hash.put(hash, t);
 				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
 			}
 		}
 	}
+	
+	private synchronized byte[] lock(){
+		return md5thingyo.generateRandomBytes(md5thingyo.MESSAGESIZE);
+	}
+	private synchronized String getMD5(byte[] text){ 
+    	try{
+            MessageDigest md;
+            md = MessageDigest.getInstance("MD5");
+            byte[] md5hash = md.digest(text);
+            String hexString = md5thingyo.byteArrayToHex(md5hash); 
+            return hexString;
+    	}
+    	catch(NoSuchAlgorithmException e){
+            throw new RuntimeException(e);
+    	}	
+    }
+	
 	public void start (){
 	     if (t == null){
 	        t = new Thread (this, "");
