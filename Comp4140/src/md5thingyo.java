@@ -113,12 +113,8 @@ public class md5thingyo {
     	byte[] end = generateRandomBytes(MESSAGESIZE-pow);	
     	int count = size;
 		while(set.size() < size){
-			byte[] temp = new byte[MESSAGESIZE];
-			start = Integer.toHexString(count).getBytes();
-			count --;
-			for(int i = 0; i < MESSAGESIZE-pow;i++){
-				temp[i+pow] = end[i];
-			}
+			String t = Integer.toHexString(count) + byteArrayToHex(end);
+			byte[] temp = t.getBytes();
 			set.add(temp);
 		}
     	return set;
