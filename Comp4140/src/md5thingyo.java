@@ -25,41 +25,57 @@ import java.util.Set;
 // the integer class has pre built in methods for this
 // note int decimal = Integer.parseInt(hexNumber, 16); (converts it to decimal)
 public class md5thingyo {
-	private static final int MESSAGESIZE = 32; // 32 bytes
+	public static final int MESSAGESIZE = 32; // 32 bytes
 	private static List <byte[]> plaintextList = new ArrayList<byte[]>();
+	public static int pow = 22;
     public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException{
-    	
+    	long time = System.nanoTime();
     	
     	byte[] plaintextTest = generateRandomBytes(MESSAGESIZE);
     	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
         
-        long time = System.nanoTime();
-        birthdayAttack(plaintextTest);
-        time = System.nanoTime() - time;
-        System.out.printf("it took %.2f seconds to run\n",time*Math.pow(10, -9));
         
-    	//diffAnal();
+        birthdayAttack(plaintextTest);
+      //diffAnal();
+        
+        
+        
+        time = System.nanoTime() - time;
+        System.out.printf("it took %.2f seconds to run everything\n",time*Math.pow(10, -9));
         System.out.println("end of processing...");
     }
     public static void birthdayAttack(byte[] plaintext){
     	 // note anything over 2^20 takes a long time 
-    	 HashMap<String, byte[]> md5Hash = largeRandomTable(20);
-         //HashMap<String, byte[]> md5Hash = largeOrganizedTable();
+    	 long time = System.nanoTime();
+    	 System.out.println("testing collison with random table of size 2^" + pow);
+    	 /* 
+    	 table t1 = new table();
+    	 table t2 = new table();
+         t1.start();
+         t2.start();
+    	 // wait for the threads to finish
+         while(t1.t.isAlive() || t2.t.isAlive()){ }
+         */
+    	 //HashMap<String, byte[]> md5Hash = t1.md5Hash;
+         HashMap<String, byte[]> md5Hash = largeRandomTable(22);
+    	 
+    	 
+    	 time = System.nanoTime() - time;
+         System.out.printf("it took %.2f seconds to generate the table\n",time*Math.pow(10, -9));
          // the random table is made in halve the time.
     	 // also increasing by double doubles time
-    	 
+    	 System.out.println(md5Hash.size());
          boolean end = false;
          int attempts = 0;
-         byte[] attack = generateRandomBytes(MESSAGESIZE);
-         //to force a collison for testing
-         //attack = plaintextList.get(0);
+         byte[] attack = plaintext;
          
          int upperBound = 100000;
-         int hash = getMD5(attack).hashCode();
+         
          while(!end){
-        	 if(md5Hash.get(hash) != null && md5Hash.get(hash).equals(getMD5(attack))){
+        	 String hash = getMD5(attack);
+        	 if(md5Hash.get(hash) != null/* && md5Hash.get(hash).equals(attack)*/){
         		 end = true;
         		 System.out.printf("hash collision: %s %s\n%80s %s\n",md5Hash.get(hash),hash,byteArrayToHex(attack),getMD5(attack));
         		 }
@@ -73,7 +89,6 @@ public class md5thingyo {
         		 String temp = byteArrayToHex(attack);
         		 temp = hexPlusPlus(temp);
         		 attack = hexStringToByteArray(temp);	 
-	        	 hash = getMD5(attack).hashCode();
 	        	 attempts ++;
         	 } 
          }
@@ -81,7 +96,6 @@ public class md5thingyo {
     public static HashMap<String, byte[]> largeRandomTable(int pow){
     	HashMap<String, byte[]> md5Hash = new HashMap<String, byte[]>();
     	int size = (int) Math.pow(2, pow);
-    	System.out.println("testing collison with random table of size 2^" + pow);
 		while(md5Hash.size() < size){
 			byte[] temp = generateRandomBytes(MESSAGESIZE);
 			String hash = getMD5(temp);
@@ -116,24 +130,6 @@ public class md5thingyo {
     		start = hexPlusPlus(start);
     	}
     	return md5Hash;
-    }
-    
-    public static byte[][] buildTable(byte[] data){
-    	byte[][] finalResult = new byte[(data.length*8)][data.length];
-    	byte[] temp = deepCopy(data);
-    	int count = 0;
-        long value = 1;
-        for(int i = 0; i < data.length;i++){
-            for(int j = 0; j < 8;j++){
-                temp[i] ^= value;
-                finalResult[count] = deepCopy(temp);
-                count++;
-                temp[i] ^= value;
-                value = value << 1;
-            }
-            value = 1;
-        }
-        return finalResult;
     }
     public static String hexPlusPlus(String input){
     	// note doesnt work on single hex chars
@@ -407,3 +403,26 @@ public class md5thingyo {
         return result;
     }
 }
+class table implements Runnable {
+	public Thread t;
+	public HashMap<String, byte[]> md5Hash = new HashMap<String, byte[]>();
+	public void run(){
+		int pow = md5thingyo.pow;
+    	int size = (int) Math.pow(2, pow);
+		while(md5Hash.size() < size){
+			byte[] t = md5thingyo.generateRandomBytes(md5thingyo.MESSAGESIZE);
+			String hash = md5thingyo.getMD5(t);
+			if(md5Hash.get(hash) == null){
+				 md5Hash.put(hash, t);
+				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
+			}
+		}
+	}
+	public void start (){
+	     if (t == null){
+	        t = new Thread (this, "");
+	        t.start ();
+	     }
+     }
+}
+
