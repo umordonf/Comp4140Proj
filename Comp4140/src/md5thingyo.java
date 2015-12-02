@@ -34,7 +34,11 @@ public class md5thingyo {
     	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
+        
+        long time = System.nanoTime();
         birthdayAttack(plaintextTest);
+        time = System.nanoTime() - time;
+        System.out.printf("it took %.2f seconds to run\n",time*Math.pow(10, -9));
         
     	//diffAnal();
         System.out.println("end of processing...");
@@ -45,26 +49,19 @@ public class md5thingyo {
     	 //Set<byte[]> set = largeRandomTable(20);
     	 Set<byte[]> set = largeOrganizedTable();
     	 
-         HashMap<Integer, String> md5Hash   = new HashMap<Integer, String>();
-         HashMap<Integer, String> plainHash = new HashMap<Integer, String>();
-         
+         HashMap<String, byte[]> md5Hash   = new HashMap<String, byte[]>();
+         //HashMap<Integer, String> plainHash = new HashMap<Integer, String>();
+         int collisions = 0;
          Iterator<byte[]> iterator = set.iterator();
          while(iterator.hasNext()) {
              byte[] setElement = iterator.next();
-             int hash = getMD5(setElement).hashCode();
+             String hash = getMD5(setElement);
 			 if(md5Hash.get(hash) == null){
-				 md5Hash.put(hash, getMD5(setElement));
-				 plainHash.put(hash, byteArrayToHex(setElement));
+				 md5Hash.put(hash, setElement);
 				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
-			 }
-			 else{
-				 // when two things are trying to be added to the same spot discard the new item
-				 //System.out.println("collison adding items to hashmap");
-	        	 //System.out.printf("hash collision: %s %s\n%80s %s\n",plainHash.get(hash),md5Hash.get(hash),byteArrayToHex(data[i]),getMD5(data[i]));
 			 }
              iterator.remove();
          }
-
          boolean end = false;
          int attempts = 0;
          byte[] attack = generateRandomBytes(MESSAGESIZE);
@@ -76,8 +73,8 @@ public class md5thingyo {
          while(!end){
         	 if(md5Hash.get(hash) != null && md5Hash.get(hash).equals(getMD5(attack))){
         		 end = true;
-        		 System.out.printf("hash collision:\ntext: %s md5: %s hash: %s\ntext: %s md5: %s hash: %s\n",plainHash.get(hash),md5Hash.get(hash),hash,byteArrayToHex(attack),getMD5(attack),getMD5(attack).hashCode());
-        	 }
+        		 System.out.printf("hash collision: %s %s\n%80s %s\n",md5Hash.get(hash),hash,byteArrayToHex(attack),getMD5(attack));
+        		 }
         	 else if(attempts >= upperBound){// probably make this a constant some where its just an upper bound 
         		 end = true;
         		 System.out.println("ran "+ attempts + " iterations with no collison");
@@ -97,8 +94,10 @@ public class md5thingyo {
     	Set<byte[]> set = new HashSet<byte[]>();
     	int size = (int) Math.pow(2, pow);
     	System.out.println("testing collison with random table of size 2^" + pow);
+    	int runs = 0;
 		while(set.size() < size){
-			set.add(generateRandomBytes(MESSAGESIZE));
+			byte[] temp = generateRandomBytes(MESSAGESIZE);
+			set.add(temp);
 		}
     	return set;
     }
@@ -107,16 +106,20 @@ public class md5thingyo {
     	int pow = 5;
     	Set<byte[]> set = new HashSet<byte[]>();
     	int size = (int) Math.pow(16, pow);
-    	System.out.println("testing collison with organized table of size 16^" + pow);
+    	System.out.println("testing collison with organized table of size 16^" + pow + "(2^" + pow*4 + ")");
     	
-    	byte[] start = generateRandomBytes(pow);
     	byte[] end = generateRandomBytes(MESSAGESIZE-pow);	
-    	int count = size;
-		while(set.size() < size){
-			String t = Integer.toHexString(count) + byteArrayToHex(end);
+    	String start = "";
+    	for(int i  = 0; i< pow;i++){
+    		start += "0";
+    	}
+    	
+    	for(int i = 0; i < size;i++){
+    		String t = start + byteArrayToHex(end);
 			byte[] temp = t.getBytes();
 			set.add(temp);
-		}
+    		start = hexPlusPlus(start);
+    	}
     	return set;
     }
     
