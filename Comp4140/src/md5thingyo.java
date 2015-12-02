@@ -45,23 +45,11 @@ public class md5thingyo {
     }
     public static void birthdayAttack(byte[] plaintext){
     	 // note anything over 2^20 takes a long time 
-    	 //Set<byte[]> set = largeRandomTable(MESSAGESIZE/2);
-    	 //Set<byte[]> set = largeRandomTable(20);
-    	 Set<byte[]> set = largeOrganizedTable();
+    	 HashMap<String, byte[]> md5Hash = largeRandomTable(20);
+         //HashMap<String, byte[]> md5Hash = largeOrganizedTable();
+         // the random table is made in halve the time.
+    	 // also increasing by double doubles time
     	 
-         HashMap<String, byte[]> md5Hash   = new HashMap<String, byte[]>();
-         //HashMap<Integer, String> plainHash = new HashMap<Integer, String>();
-         int collisions = 0;
-         Iterator<byte[]> iterator = set.iterator();
-         while(iterator.hasNext()) {
-             byte[] setElement = iterator.next();
-             String hash = getMD5(setElement);
-			 if(md5Hash.get(hash) == null){
-				 md5Hash.put(hash, setElement);
-				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
-			 }
-             iterator.remove();
-         }
          boolean end = false;
          int attempts = 0;
          byte[] attack = generateRandomBytes(MESSAGESIZE);
@@ -90,21 +78,24 @@ public class md5thingyo {
         	 } 
          }
     }
-    public static Set<byte[]> largeRandomTable(int pow){
-    	Set<byte[]> set = new HashSet<byte[]>();
+    public static HashMap<String, byte[]> largeRandomTable(int pow){
+    	HashMap<String, byte[]> md5Hash = new HashMap<String, byte[]>();
     	int size = (int) Math.pow(2, pow);
     	System.out.println("testing collison with random table of size 2^" + pow);
-    	int runs = 0;
-		while(set.size() < size){
+		while(md5Hash.size() < size){
 			byte[] temp = generateRandomBytes(MESSAGESIZE);
-			set.add(temp);
+			String hash = getMD5(temp);
+			if(md5Hash.get(hash) == null){
+				 md5Hash.put(hash, temp);
+				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
+			}
 		}
-    	return set;
+    	return md5Hash;
     }
-    public static Set<byte[]> largeOrganizedTable(){
+    public static HashMap<String, byte[]> largeOrganizedTable(){
     	//2^32 = 16^7
     	int pow = 5;
-    	Set<byte[]> set = new HashSet<byte[]>();
+    	HashMap<String, byte[]> md5Hash = new HashMap<String, byte[]>();
     	int size = (int) Math.pow(16, pow);
     	System.out.println("testing collison with organized table of size 16^" + pow + "(2^" + pow*4 + ")");
     	
@@ -117,10 +108,14 @@ public class md5thingyo {
     	for(int i = 0; i < size;i++){
     		String t = start + byteArrayToHex(end);
 			byte[] temp = t.getBytes();
-			set.add(temp);
+			String hash = getMD5(temp);
+			if(md5Hash.get(hash) == null){
+				 md5Hash.put(hash, temp);
+				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
+			}
     		start = hexPlusPlus(start);
     	}
-    	return set;
+    	return md5Hash;
     }
     
     public static byte[][] buildTable(byte[] data){
