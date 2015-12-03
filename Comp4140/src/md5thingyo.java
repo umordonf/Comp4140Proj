@@ -59,7 +59,7 @@ public class md5thingyo {
     	 }
 		 while(md5Hash.size() < size){
 			 System.out.println(md5Hash.size());
-		 }
+		 } 
 		 System.out.println(md5Hash.size());
     	 // wait for the threads to finish
          
@@ -79,10 +79,11 @@ public class md5thingyo {
          
          while(!end){
         	 String hash = getMD5(attack);
+        	// System.out.println(hash);
         	 if(md5Hash.get(hash) != null/* && md5Hash.get(hash).equals(attack)*/){
         		 end = true;
         		 System.out.printf("hash collision: %s %s\n%80s %s\n",md5Hash.get(hash),hash,byteArrayToHex(attack),getMD5(attack));
-        		 }
+    		 }
         	 else if(attempts >= upperBound){// probably make this a constant some where its just an upper bound 
         		 end = true;
         		 System.out.println("ran "+ attempts + " iterations with no collison");
@@ -91,8 +92,11 @@ public class md5thingyo {
 	        	 // moddify byte array attack here to try and get a collision
         		 // this is slightly better code but still not perfect
         		 String temp = byteArrayToHex(attack);
+        		// System.out.println("byteArrayToHex finished");
         		 temp = hexPlusPlus(temp);
+        		// System.out.println("hexPlusPlus finished");
         		 attack = hexStringToByteArray(temp);	 
+        		 //System.out.println("hexStringToByteArray finished");
 	        	 attempts ++;
         	 } 
          }
@@ -347,7 +351,7 @@ class table implements Runnable {
 	Semaphore lock = new Semaphore(1, true);
 	public table(int pow,String name){
 		size = (int) Math.pow(2, pow);
-		this.name = name;
+		this.name = name; 
 	}
 	
 	public void run(){
@@ -369,27 +373,17 @@ class table implements Runnable {
 			}
 		}
 	} 
-
-	
 	private synchronized byte[] lock(){
 		return md5thingyo.generateRandomBytes(md5thingyo.MESSAGESIZE);
 	}
 	private synchronized String getMD5(byte[] text){ 
-    	try{
-            MessageDigest md;
-            md = MessageDigest.getInstance("MD5");
-            byte[] md5hash = md.digest(text);
-            String hexString = md5thingyo.byteArrayToHex(md5hash); 
-            return hexString;
-    	}
-    	catch(NoSuchAlgorithmException e){
-            throw new RuntimeException(e);
-    	}	
+		return md5thingyo.getMD5(text);
     }
-	
 	public void start (){
 	     if (t == null){
 	        t = new Thread (this, name);
+	        t.setDaemon(true);
+	        // Daemon threads die when system.exit is called, otherwise had threads continuing when application was done
 	        t.start ();
 	     }
      }
