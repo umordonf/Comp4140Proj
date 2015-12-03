@@ -16,6 +16,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 
 
 //import org.apache.commons.codec.binary.Hex;
@@ -33,8 +34,8 @@ public class md5thingyo {
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
         
-        
-        birthdayAttack(plaintextTest);
+
+    	birthdayAttack(plaintextTest);
       //diffAnal();
         
         
@@ -45,17 +46,21 @@ public class md5thingyo {
     }
     public static void birthdayAttack(byte[] plaintext){
     	 // note anything over 2^20 takes a long time 
+    	 int pow = 20;
+    	
     	 long time = System.nanoTime();
-    	 System.out.println("testing collison with random table of size 2^" + 20);
+    	 System.out.println("testing collison with random table of size 2^" + pow);
     	// /* 
+    	 int size = (int) Math.pow(2, pow);
     	 table[] t = new table[8];
     	 for(int i = 0; i < t.length;i++){
-    		 t[i] = new table(15,""+ i);
+    		 t[i] = new table(pow,""+ i);
     		 t[i].start();
     	 }
-    	 for(int i = 0; i < t.length;i++){
-    		 while(t[i].t.isAlive()){ }
-    	 }
+		 while(md5Hash.size() < size){
+			 System.out.println(md5Hash.size());
+		 }
+		 System.out.println(md5Hash.size());
     	 // wait for the threads to finish
          
        //  */
@@ -339,21 +344,32 @@ class table implements Runnable {
 	public Thread t;
 	private int size;
 	private String name;
+	Semaphore lock = new Semaphore(1, true);
 	public table(int pow,String name){
 		size = (int) Math.pow(2, pow);
 		this.name = name;
 	}
 	
-	public synchronized void run(){
-		while(md5thingyo.md5Hash.size() < size){
+	public void run(){
+	   while(md5thingyo.md5Hash.size() < size){
 			byte[] t = lock();
 			String hash = getMD5(t);
 			if(md5thingyo.md5Hash.get(hash) == null){
-				md5thingyo.md5Hash.put(hash, t);
-				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
+				try {
+					lock.acquire(1);
+					if(md5thingyo.md5Hash.size() < size){
+						md5thingyo.md5Hash.putIfAbsent(hash, t);
+					}
+				} catch (Exception e) {
+					// Logging
+				}
+				finally{
+				   lock.release(1);
+				}
 			}
 		}
-	}
+	} 
+
 	
 	private synchronized byte[] lock(){
 		return md5thingyo.generateRandomBytes(md5thingyo.MESSAGESIZE);
