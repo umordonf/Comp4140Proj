@@ -24,10 +24,10 @@ import java.util.Random;
 public class md5thingyo {
 	public static final int MESSAGESIZE = 32; // 32 bytes
 	private static List <byte[]> plaintextList = new ArrayList<byte[]>();
-	public static HashMap<String, byte[]> md5Hash = new HashMap<String, byte[]>();
+	public static HashMap<String, byte[]> md5Hash;
     public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException{
     	long time = System.nanoTime();
-    	
+    	md5Hash = new HashMap<String, byte[]>();
     	byte[] plaintextTest = generateRandomBytes(MESSAGESIZE);
     	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
@@ -46,23 +46,26 @@ public class md5thingyo {
     public static void birthdayAttack(byte[] plaintext){
     	 // note anything over 2^20 takes a long time 
     	 long time = System.nanoTime();
-    	 System.out.println("testing collison with random table of size 2^" + 22);
+    	 System.out.println("testing collison with random table of size 2^" + 20);
     	// /* 
-    	 table t1 = new table(22);
-    	 table t2 = new table(22);
-         t1.start();
-         t2.start();
+    	 table[] t = new table[8];
+    	 for(int i = 0; i < t.length;i++){
+    		 t[i] = new table(15,""+ i);
+    		 t[i].start();
+    	 }
+    	 for(int i = 0; i < t.length;i++){
+    		 while(t[i].t.isAlive()){ }
+    	 }
     	 // wait for the threads to finish
-         while(t1.t.isAlive() || t2.t.isAlive()){ }
-      //   */
-        // HashMap<String, byte[]> md5Hash = largeRandomTable(22);
+         
+       //  */
+         //largeRandomTable(20);
     	 
     	 
     	 time = System.nanoTime() - time;
          System.out.printf("it took %.2f seconds to generate the table\n",time*Math.pow(10, -9));
          // the random table is made in halve the time.
     	 // also increasing by double doubles time
-    	 System.out.println(md5Hash.size());
          boolean end = false;
          int attempts = 0;
          byte[] attack = plaintext;
@@ -88,40 +91,6 @@ public class md5thingyo {
 	        	 attempts ++;
         	 } 
          }
-    }
-    public static void largeRandomTable(int pow){
-    	int size = (int) Math.pow(2, pow);
-		while(md5Hash.size() < size){
-			byte[] temp = generateRandomBytes(MESSAGESIZE);
-			String hash = getMD5(temp);
-			if(md5Hash.get(hash) == null){
-				 md5Hash.put(hash, temp);
-				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
-			}
-		}
-    }
-    public static void largeOrganizedTable(){
-    	//2^32 = 16^7
-    	int pow = 5;
-    	int size = (int) Math.pow(16, pow);
-    	System.out.println("testing collison with organized table of size 16^" + pow + "(2^" + pow*4 + ")");
-    	
-    	byte[] end = generateRandomBytes(MESSAGESIZE-pow);	
-    	String start = "";
-    	for(int i  = 0; i< pow;i++){
-    		start += "0";
-    	}
-    	
-    	for(int i = 0; i < size;i++){
-    		String t = start + byteArrayToHex(end);
-			byte[] temp = t.getBytes();
-			String hash = getMD5(temp);
-			if(md5Hash.get(hash) == null){
-				 md5Hash.put(hash, temp);
-				 //System.out.println("Plaintexts: " + plainHash.get(hash) + " md5 hashes: " + md5Hash.get(hash);
-			}
-    		start = hexPlusPlus(start);
-    	}
     }
     public static String hexPlusPlus(String input){
     	// note doesnt work on single hex chars
@@ -166,7 +135,6 @@ public class md5thingyo {
         int randomNum = generator.nextInt((max - min) + 1) + min;
         return randomNum;
     }
-    
     public static void diffAnal(){
     	//ill split this crap up later but for now just leave it like this cause i hate scrolling around while bug fixing
     	// This is for starting the differential attack on round three
@@ -218,25 +186,6 @@ public class md5thingyo {
     	*/
     	
     }
-    
-        
-	/*
-	 private static String convertToHex(byte[] data) { 
-	        StringBuffer buf = new StringBuffer();
-	        for (int i = 0; i < data.length; i++) { 
-	            int halfbyte = (data[i] >>> 4) & 0x0F;
-	            int two_halfs = 0;
-	            do { 
-	                if ((0 <= halfbyte) && (halfbyte <= 9)) 
-	                    buf.append((char) ('0' + halfbyte));
-	                else 
-	                    buf.append((char) ('a' + (halfbyte - 10)));
-	                halfbyte = data[i] & 0x0F;
-	            } while(two_halfs++ < 1);
-	        } 
-	        return buf.toString();
-	    } 
-	    */
     public static byte[] generateRandomBytes(int size){
     	/*
     	long rgenseed = System.nanoTime();
@@ -252,14 +201,12 @@ public class md5thingyo {
         //System.out.println(Hex.encodeHexString(newRandomByteArray));
         return newRandomByteArray;
     }
-    
     public static int generateMessageBlock(){
     	int result = 0;
     	byte[] temp =  generateRandomBytes(4);
     	result = ByteBuffer.wrap(temp).getInt();
     	return result;
     }
-    
     public static void generatePlaintext(){
     	//create 4-8 message blocks of 128 bits each
     	//might be useless now 
@@ -268,7 +215,6 @@ public class md5thingyo {
     		plaintextList.add(generateRandomBytes(MESSAGESIZE));
     	}
     }
-    
     public static void printToFile(){
     	//this will work for both of us as it will get the current location of the github project that we are working in.
     	Path currentRelativePath = Paths.get("");
@@ -290,7 +236,6 @@ public class md5thingyo {
     	    //exception handling left as an exercise for the reader
     	}}// no idea why but compiler insists on another closing bracket (or we get compile errors)
     }
-    
     public static void plainTextLog(byte[] input){
     	String timeStamp = new SimpleDateFormat("MM,dd HH:mm").format(Calendar.getInstance().getTime());
     	Path currentRelativePath = Paths.get("");
@@ -303,15 +248,12 @@ public class md5thingyo {
     	    //exception handling left as an exercise for the reader
     	}
     }
-
-    
     public static String toBinary( byte[] bytes ){
         StringBuilder sb = new StringBuilder(bytes.length * Byte.SIZE);
         for( int i = 0; i < Byte.SIZE * bytes.length; i++ )
             sb.append((bytes[i / Byte.SIZE] << i % Byte.SIZE & 0x80) == 0 ? '0' : '1');
         return sb.toString();
     }
-
     public static byte[] fromBinary( String s ){
         int sLen = s.length();
         byte[] toReturn = new byte[(sLen + Byte.SIZE - 1) / Byte.SIZE];
@@ -333,8 +275,7 @@ public class md5thingyo {
     	    //exception handling left as an exercise for the reader
     	}
     }
-
-    public static String getMD5(byte[] text){ 
+    public synchronized static String getMD5(byte[] text){ 
     	try{
             MessageDigest md;
             md = MessageDigest.getInstance("MD5");
@@ -362,7 +303,6 @@ public class md5thingyo {
         }
         return result;
     }
-    
     public static byte[] hexStringToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
@@ -398,11 +338,13 @@ public class md5thingyo {
 class table implements Runnable {
 	public Thread t;
 	private int size;
-	public table(int pow){
+	private String name;
+	public table(int pow,String name){
 		size = (int) Math.pow(2, pow);
+		this.name = name;
 	}
 	
-	public void run(){
+	public synchronized void run(){
 		while(md5thingyo.md5Hash.size() < size){
 			byte[] t = lock();
 			String hash = getMD5(t);
@@ -431,9 +373,27 @@ class table implements Runnable {
 	
 	public void start (){
 	     if (t == null){
-	        t = new Thread (this, "");
+	        t = new Thread (this, name);
 	        t.start ();
 	     }
      }
 }
-
+/*
+Exception in thread "4" java.lang.ClassCastException: java.util.HashMap$Node cannot be cast to java.util.HashMap$TreeNode
+	at java.util.HashMap$TreeNode.moveRootToFront(Unknown Source)
+	at java.util.HashMap$TreeNode.treeify(Unknown Source)
+	at java.util.HashMap.treeifyBin(Unknown Source)
+	at java.util.HashMap.putVal(Unknown Source)
+	at java.util.HashMap.put(Unknown Source)
+	at table.run(md5thingyo.java:415)
+	at java.lang.Thread.run(Unknown Source)
+	
+Exception in thread "7" java.lang.ClassCastException: java.util.HashMap$Node cannot be cast to java.util.HashMap$TreeNode
+	at java.util.HashMap$TreeNode.moveRootToFront(Unknown Source)
+	at java.util.HashMap$TreeNode.treeify(Unknown Source)
+	at java.util.HashMap.treeifyBin(Unknown Source)
+	at java.util.HashMap.putVal(Unknown Source)
+	at java.util.HashMap.put(Unknown Source)
+	at table.run(md5thingyo.java:415)
+	at java.lang.Thread.run(Unknown Source)
+	*/
