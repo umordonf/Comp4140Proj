@@ -1,7 +1,7 @@
 import java.util.concurrent.Semaphore;
 
 public class table implements Runnable {
-	public Thread t;
+	public Thread thread;
 	private int size;
 	private String name;
 	Semaphore lock = new Semaphore(1, true);
@@ -29,11 +29,11 @@ public class table implements Runnable {
 		}
 	} 
 	public void start (){
-	     if (t == null){
-	        t = new Thread (this, name);
-	        t.setDaemon(true);
+	     if (thread == null){
+	    	 thread = new Thread (this, name);
+	    	 thread.setDaemon(true);
 	        // Daemon threads die when system.exit is called, otherwise had threads continuing when application was done
-	        t.start ();
+	    	 thread.start ();
 	     }
      }
 }

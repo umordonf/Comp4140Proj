@@ -28,14 +28,19 @@ public class md5thingyo {
 	public static HashMap<String, byte[]> md5Hash;
     public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException{
     	long time = System.nanoTime();
-    	md5Hash = new HashMap<String, byte[]>();
     	byte[] plaintextTest = generateRandomBytes(MESSAGESIZE);
     	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
         
-
-    	birthdayAttack(plaintextTest);
+        int pow = 15;
+   	 	System.out.println("testing collison with random table of size 2^" + pow);
+        
+        
+        for(int i = 0; i < 10;i++){
+        	birthdayAttack(plaintextTest,pow);
+        }
+    	
       //diffAnal();
         
         
@@ -44,49 +49,47 @@ public class md5thingyo {
         System.out.printf("it took %.2f seconds to run everything\n",time*Math.pow(10, -9));
         System.out.println("end of processing...");
     }
-    public static void birthdayAttack(byte[] plaintext){
+    public static void birthdayAttack(byte[] plaintext, int pow){
     	 // note anything over 2^20 takes a long time 
-    	 int pow = 20;
-    	
+    	 md5Hash = new HashMap<String, byte[]>();
     	 long time = System.nanoTime();
-    	 System.out.println("testing collison with random table of size 2^" + pow);
-    	// /* 
-    	 int size = (int) Math.pow(2, pow);
-    	 table[] t = new table[8];
-    	 for(int i = 0; i < t.length;i++){
-    		 t[i] = new table(pow,""+ i);
-    		 t[i].start();
+    	 table[] table = new table[8];
+    	 for(int i = 0; i < table.length;i++){
+    		 table[i] = new table(pow,""+ i);
+    		 table[i].start();
     	 }
-		 while(md5Hash.size() < size){
-			 System.out.println(md5Hash.size());
-		 } 
-		 System.out.println(md5Hash.size());
-    	 // wait for the threads to finish
-         
-       //  */
-         //largeRandomTable(20);
-    	 
+    	// wait for the threads to finish
+    	 for (table thread : table) {
+			try {
+				thread.thread.join();
+			} catch (InterruptedException e) {
+				System.out.println("thread join error: " + e);
+			}
+    	 }
     	 
     	 time = System.nanoTime() - time;
-         System.out.printf("it took %.2f seconds to generate the table\n",time*Math.pow(10, -9));
-         // the random table is made in halve the time.
-    	 // also increasing by double doubles time
+         System.out.printf("it took %.2f seconds to generate the table of size %s\n",time*Math.pow(10, -9),md5Hash.size());
+        
          boolean end = false;
          int attempts = 0;
          byte[] attack = plaintext;
-         
          int upperBound = 100000;
          
+         /* foce a collision 
+         md5Hash.put(getMD5(plaintext), plaintext); 
+         attack = plaintext;
+         */
          while(!end){
         	 String hash = getMD5(attack);
         	// System.out.println(hash);
-        	 if(md5Hash.get(hash) != null/* && md5Hash.get(hash).equals(attack)*/){
+        	 if(md5Hash.get(hash) != null && byteArrayToHex(md5Hash.get(hash)).equalsIgnoreCase(byteArrayToHex(attack))){
         		 end = true;
-        		 System.out.printf("hash collision: %s %s\n%80s %s\n",md5Hash.get(hash),hash,byteArrayToHex(attack),getMD5(attack));
+        		 byte[] temp = md5Hash.get(hash);
+        		 System.out.printf("hash collision: %s %s\ncollision with: %s %s\n\n",byteArrayToHex(temp),hash,byteArrayToHex(attack),getMD5(attack));
     		 }
         	 else if(attempts >= upperBound){// probably make this a constant some where its just an upper bound 
         		 end = true;
-        		 System.out.println("ran "+ attempts + " iterations with no collison");
+        		 //System.out.println("ran "+ attempts + " iterations with no collison");
         	 }
         	 else{
 	        	 // moddify byte array attack here to try and get a collision
