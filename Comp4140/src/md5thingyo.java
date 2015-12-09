@@ -33,13 +33,9 @@ public class md5thingyo {
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
         
-        int pow = 15;
-   	 	System.out.println("testing collison with random table of size 2^" + pow);
-        
-        
-        for(int i = 0; i < 10;i++){
-        	birthdayAttack(plaintextTest,pow);
-        }
+        int pow = MESSAGESIZE*2;
+   	 	System.out.println("note: runing a birthday attack with 2^" + pow + " elements, this will take hours/days");
+        birthdayAttack(plaintextTest,pow);
     	
       //diffAnal();
         
@@ -75,7 +71,7 @@ public class md5thingyo {
          byte[] attack = plaintext;
          int upperBound = 100000;
          
-         /* foce a collision 
+         /* force a collision 
          md5Hash.put(getMD5(plaintext), plaintext); 
          attack = plaintext;
          */

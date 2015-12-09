@@ -10,22 +10,22 @@ public class table implements Runnable {
 		this.name = name; 
 	}
 	public void run(){
-		try {
-			lock.acquire(1);
-			while(md5thingyo.md5Hash.size() < size){
-				byte[] t = md5thingyo.generateRandomBytes(md5thingyo.MESSAGESIZE);
-				String hash = md5thingyo.getMD5(t);	
+		while(md5thingyo.md5Hash.size() < size){
+			byte[] t = md5thingyo.generateRandomBytes(md5thingyo.MESSAGESIZE);
+			String hash = md5thingyo.getMD5(t);	
+			try {
+				lock.acquire(1);
 				if(md5thingyo.md5Hash.get(hash) == null){
 					if(md5thingyo.md5Hash.size() < size){
 						md5thingyo.md5Hash.putIfAbsent(hash, t);
 					}
 				}
+			} catch (Exception e) {
+				// Logging
 			}
-		} catch (Exception e) {
-			// Logging
-		}
-		finally{
-		   lock.release(1);
+			finally{
+			   lock.release(1);
+			}
 		}
 	} 
 	public void start (){
