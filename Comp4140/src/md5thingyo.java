@@ -33,8 +33,14 @@ public class md5thingyo {
    	 	
    	 	birthdayAttackExperiment();
    	 	
-   	 	System.out.println("note: runing a birthday attack with 2^" + pow + " elements, this will take hours/days, even with the 8 threads were running");
-        birthdayAttack(plaintextTest,pow);
+   	 	byte[] plaintextTest1 = generateRandomBytes(MESSAGESIZE/8);
+   	 	// 16 bits
+   	 	System.out.println("testing with 1/4 the size md5 message");
+   	 	birthdayAttack(plaintextTest1,MESSAGESIZE/2);
+   	 	
+   	 	//System.out.println("testing with full size md5 message");
+        //birthdayAttack(plaintextTest,pow);
+        
     	
       //diffAnal();
         
@@ -68,19 +74,22 @@ public class md5thingyo {
     		}	
     	}
     	if(position > -1){
-    		System.out.println("two people ahd the same birthday of day: " + position + "\n");
+    		System.out.println("two people had the same birthday of day: " + position + "\n");
     	}
     	else{
     		System.out.println("no two people with the same birthday, thats odd as the chance of collisin was extreamly high\n");
     	}	
     } 
+    
     public static void birthdayAttack(byte[] plaintext, int pow){
     	 // note anything over 2^20 takes a long time 
+    	System.out.println("note: runing a birthday attack with 2^" + pow + " elements, this might take hours/days, even with the 8 threads were running");
+    	
     	 md5Hash = new HashMap<String, byte[]>();
     	 long time = System.nanoTime();
     	 table[] table = new table[8];
     	 for(int i = 0; i < table.length;i++){
-    		 table[i] = new table(pow,""+ i);
+    		 table[i] = new table(plaintext.length,""+ i,pow);
     		 table[i].start();
     	 }
     	// wait for the threads to finish
@@ -93,41 +102,24 @@ public class md5thingyo {
     	 }
     	 
     	 time = System.nanoTime() - time;
-         System.out.printf("it took %.2f seconds to generate the table of size %s\n",time*Math.pow(10, -9),md5Hash.size());
-        
+         System.out.printf("it took %.2f seconds to generate the table of size %s\n\n",time*Math.pow(10, -9),md5Hash.size());
          boolean end = false;
-         int attempts = 0;
          byte[] attack = plaintext;
-         int upperBound = 100000;
          
-         /* force a collision 
-         md5Hash.put(getMD5(plaintext), plaintext); 
-         attack = plaintext;
-         */
-         while(!end){
-        	 String hash = getMD5(attack);
-        	// System.out.println(hash);
-        	 if(md5Hash.get(hash) != null && byteArrayToHex(md5Hash.get(hash)).equalsIgnoreCase(byteArrayToHex(attack))){
-        		 end = true;
-        		 byte[] temp = md5Hash.get(hash);
-        		 System.out.printf("hash collision: %s %s\ncollision with: %s %s\n\n",byteArrayToHex(temp),hash,byteArrayToHex(attack),getMD5(attack));
-    		 }
-        	 else if(attempts >= upperBound){// probably make this a constant some where its just an upper bound 
-        		 end = true;
-        		 //System.out.println("ran "+ attempts + " iterations with no collison");
+         for(int i = 0; i < Math.pow(2, pow) && !end;i++){
+        	 attack = generateRandomBytes(plaintext.length);
+        	 String hash = getMD5(attack).substring(0,plaintext.length);
+        	 if(md5Hash.get(hash) != null){
+        		 String attackHex = byteArrayToHex(attack);
+	        	 String md5Hex 	  = byteArrayToHex(md5Hash.get(hash));
+	        	 if(!md5Hex.equalsIgnoreCase(attackHex)){
+	        		 end = true;
+	        		 byte[] temp = md5Hash.get(hash);
+	        		 System.out.printf("hash collision: %s %s\ncollision with: %s %s\n\n",byteArrayToHex(temp),hash,byteArrayToHex(attack),getMD5(attack).substring(0,plaintext.length));
+	    		 }
         	 }
-        	 else{
-	        	 // moddify byte array attack here to try and get a collision
-        		 // this is slightly better code but still not perfect
-        		 String temp = byteArrayToHex(attack);
-        		// System.out.println("byteArrayToHex finished");
-        		 temp = hexPlusPlus(temp);
-        		// System.out.println("hexPlusPlus finished");
-        		 attack = hexStringToByteArray(temp);	 
-        		 //System.out.println("hexStringToByteArray finished");
-	        	 attempts ++;
-        	 } 
          }
+         
     }
     public static String hexPlusPlus(String input){
     	// note doesnt work on single hex chars
