@@ -16,12 +16,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Semaphore;
 
-
-//import org.apache.commons.codec.binary.Hex;
-// the integer class has pre built in methods for this
-// note int decimal = Integer.parseInt(hexNumber, 16); (converts it to decimal)
 public class md5thingyo {
 	public static final int MESSAGESIZE = 32; // 32 bytes
 	private static List <byte[]> plaintextList = new ArrayList<byte[]>();
@@ -34,7 +29,7 @@ public class md5thingyo {
         System.out.println();
         
         int pow = MESSAGESIZE*2;
-   	 	System.out.println("note: runing a birthday attack with 2^" + pow + " elements, this will take hours/days");
+   	 	System.out.println("note: runing a birthday attack with 2^" + pow + " elements, this will take hours/days, even with the 8 threads were running");
         birthdayAttack(plaintextTest,pow);
     	
       //diffAnal();
