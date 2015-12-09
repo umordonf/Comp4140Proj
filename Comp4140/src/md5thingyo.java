@@ -21,6 +21,7 @@ public class md5thingyo {
 	public static final int MESSAGESIZE = 32; // 32 bytes
 	private static List <byte[]> plaintextList = new ArrayList<byte[]>();
 	public static HashMap<String, byte[]> md5Hash;
+	public static HashMap<Integer,Integer> experiment;
     public static void main(String[] args) throws NoSuchAlgorithmException, UnsupportedEncodingException{
     	long time = System.nanoTime();
     	byte[] plaintextTest = generateRandomBytes(MESSAGESIZE);
@@ -29,6 +30,9 @@ public class md5thingyo {
         System.out.println();
         
         int pow = MESSAGESIZE*2;
+   	 	
+   	 	birthdayAttackExperiment();
+   	 	
    	 	System.out.println("note: runing a birthday attack with 2^" + pow + " elements, this will take hours/days, even with the 8 threads were running");
         birthdayAttack(plaintextTest,pow);
     	
@@ -40,6 +44,36 @@ public class md5thingyo {
         System.out.printf("it took %.2f seconds to run everything\n",time*Math.pow(10, -9));
         System.out.println("end of processing...");
     }
+    public static void birthdayAttackExperiment(){
+    	experiment = new HashMap<Integer,Integer>();
+    	System.out.println("was not 100% sure how you would want an experement for a birthday attack but heres the typical same birthday version");
+    	System.out.println("with 23 simulated people in this there is a 50% chance of collison");
+    	// birthdays between day 1 and day 365
+    	int max = 365;
+    	int min = 1;
+    	// root 365 ~= 19;
+    	int tableSize = 19;
+    	for(int i = 0; i < tableSize;i++){
+    		int val = randInt(min,max);
+    		experiment.put(val,val);
+    		
+    	}
+    	int position = -1;
+    	boolean found = false;
+    	for(int i = 0; i < 23 && !found;i++){
+    		int pos = randInt(min,max);
+    		if(experiment.get(pos) != null && pos == experiment.get(pos)){
+    			found = true;
+    			position = i;
+    		}	
+    	}
+    	if(position > -1){
+    		System.out.println("two people ahd the same birthday of day: " + position);
+    	}
+    	else{
+    		System.out.println("no two people with the same birthday, was a 50% chance at a collision");
+    	}	
+    } 
     public static void birthdayAttack(byte[] plaintext, int pow){
     	 // note anything over 2^20 takes a long time 
     	 md5Hash = new HashMap<String, byte[]>();
