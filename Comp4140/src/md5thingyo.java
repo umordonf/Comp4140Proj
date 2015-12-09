@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Random;
 
 public class md5thingyo {
-	public static final int MESSAGESIZE = 32; // 32 bytes
+	public static final int MESSAGESIZE = 16; // 16 bytes
 	private static List <byte[]> plaintextList = new ArrayList<byte[]>();
 	public static HashMap<String, byte[]> md5Hash;
 	public static HashMap<Integer,Integer> experiment;
@@ -28,19 +28,25 @@ public class md5thingyo {
     	System.out.println("original byte array:   " + byteArrayToHex(plaintextTest));// just printing out plaintextTest was printing its memory address
     	System.out.println("MD5 hashed byte array: " + getMD5(plaintextTest)  + " input length: " + plaintextTest.length*2);// (2 hex chars per byte)
         System.out.println();
-        
-        int pow = MESSAGESIZE*2;
-   	 	
+
    	 	birthdayAttackExperiment();
    	 	
-   	 	byte[] plaintextTest1 = generateRandomBytes(MESSAGESIZE/8);
-   	 	// 16 bits
+   	 	int size = 4;
+   	 	
+   	 	byte[] plaintextTest1 = generateRandomBytes(size);
+   	 	// 4 bytes is 32 bits
    	 	System.out.println("testing with 1/4 the size md5 message");
-   	 	birthdayAttack(plaintextTest1,MESSAGESIZE/2);
+   	 	birthdayAttack(plaintextTest1,size*4);
+   	 	
+   	 	
    	 	
    	 	//System.out.println("testing with full size md5 message");
-        //birthdayAttack(plaintextTest,pow);
-        
+        //birthdayAttack(plaintextTest,MESSAGESIZE*2);
+        //128 bit = 16 byte messages = 32 hex chars plaintext 32 bytes md5 hash
+   	 	// 64 bit = 8  byte messages = 16 hex chars plaintext 16 bytes hash
+   	 	//32 bit  = 4  byte messages = 8  hex chars plaintext 4  bytes md5 hash
+   	 	
+   	 	
     	
       //diffAnal();
         
@@ -108,14 +114,14 @@ public class md5thingyo {
          
          for(int i = 0; i < Math.pow(2, pow) && !end;i++){
         	 attack = generateRandomBytes(plaintext.length);
-        	 String hash = getMD5(attack).substring(0,plaintext.length);
+        	 String hash = getMD5(attack).substring(0,plaintext.length*2);
         	 if(md5Hash.get(hash) != null){
         		 String attackHex = byteArrayToHex(attack);
 	        	 String md5Hex 	  = byteArrayToHex(md5Hash.get(hash));
 	        	 if(!md5Hex.equalsIgnoreCase(attackHex)){
 	        		 end = true;
 	        		 byte[] temp = md5Hash.get(hash);
-	        		 System.out.printf("hash collision: %s %s\ncollision with: %s %s\n\n",byteArrayToHex(temp),hash,byteArrayToHex(attack),getMD5(attack).substring(0,plaintext.length));
+	        		 System.out.printf("collision, MD5 hash: %s, plaintext: %s\ncollision, MD5 hash: %s, plaintext: %s\n\n",hash,byteArrayToHex(temp),getMD5(attack).substring(0,plaintext.length*2),byteArrayToHex(attack));
 	    		 }
         	 }
          }

@@ -16,7 +16,7 @@ public class table implements Runnable {
 	public void run(){
 		while(md5thingyo.md5Hash.size() < size){
 			byte[] t = md5thingyo.generateRandomBytes(pow);
-			String hash = md5thingyo.getMD5(t).substring(0,pow);	
+			String hash = md5thingyo.getMD5(t).substring(0,pow*2);	
 			try {
 				lock.acquire(1);
 				if(md5thingyo.md5Hash.get(hash) == null){
