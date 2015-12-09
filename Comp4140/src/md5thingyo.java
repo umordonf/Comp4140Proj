@@ -47,7 +47,7 @@ public class md5thingyo {
     public static void birthdayAttackExperiment(){
     	experiment = new HashMap<Integer,Integer>();
     	System.out.println("was not 100% sure how you would want an experement for a birthday attack but heres the typical same birthday version");
-    	System.out.println("with 23 simulated people in this there is a 50% chance of collison");
+    	System.out.println("with 40 simulated people in this there is a very high chance of collison");
     	// birthdays between day 1 and day 365
     	int max = 365;
     	int min = 1;
@@ -60,7 +60,7 @@ public class md5thingyo {
     	}
     	int position = -1;
     	boolean found = false;
-    	for(int i = 0; i < 23 && !found;i++){
+    	for(int i = 0; i < 40 && !found;i++){
     		int pos = randInt(min,max);
     		if(experiment.get(pos) != null && pos == experiment.get(pos)){
     			found = true;
@@ -68,10 +68,10 @@ public class md5thingyo {
     		}	
     	}
     	if(position > -1){
-    		System.out.println("two people ahd the same birthday of day: " + position);
+    		System.out.println("two people ahd the same birthday of day: " + position + "\n");
     	}
     	else{
-    		System.out.println("no two people with the same birthday, was a 50% chance at a collision");
+    		System.out.println("no two people with the same birthday, thats odd as the chance of collisin was extreamly high\n");
     	}	
     } 
     public static void birthdayAttack(byte[] plaintext, int pow){
